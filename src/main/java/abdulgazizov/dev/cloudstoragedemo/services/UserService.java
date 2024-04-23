@@ -6,4 +6,5 @@ import abdulgazizov.dev.cloudstoragedemo.entity.User;
 public interface UserService {
     User save(UserDto user);
     User findById(Long id);
+    User findByUsername(String username);
 }

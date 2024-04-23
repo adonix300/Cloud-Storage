@@ -24,12 +24,17 @@ public class UserServiceImpl implements UserService {
         user.setUsername(userDto.getUsername());
         user.setPassword(userDto.getPassword());
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.USER);
+        roles.add(Role.ROLE_USER);
         user.setRoles(roles);
         return userRepository.save(user);
     }
 
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+    }
+
+    @Override
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
     }
 }
