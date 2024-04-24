@@ -13,6 +13,6 @@ public class FileStorageController {
 
     @PostMapping("{id}/upload")
     public void uploadFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-        fileStorageService.upload(id, file);
+        fileStorageService.upload(file);
     }
 }
