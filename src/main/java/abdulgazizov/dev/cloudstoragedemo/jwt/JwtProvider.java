@@ -1,13 +1,13 @@
 package abdulgazizov.dev.cloudstoragedemo.jwt;
 
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
+import abdulgazizov.dev.cloudstoragedemo.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -24,12 +24,10 @@ public class JwtProvider {
     private final SecretKey jwtAccessSecret;
     private final SecretKey jwtRefreshSecret;
 
-    public JwtProvider(
-            @Value("${jwt.secret.access}") String jwtAcessSecret,
-            @Value("${jwt.secret.refresh}") String jwtRefreshSecret
-    ) {
-        this.jwtAccessSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtAcessSecret));
-        this.jwtRefreshSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtRefreshSecret));
+    @Autowired
+    public JwtProvider(JwtProperties jwtProperties) {
+        this.jwtAccessSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.jwtAccessSecret()));
+        this.jwtRefreshSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.jwtRefreshSecret()));
     }
 
     public String generateAccessToken(User user) {
