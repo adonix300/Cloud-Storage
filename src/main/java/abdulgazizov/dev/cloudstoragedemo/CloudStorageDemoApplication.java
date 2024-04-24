@@ -9,5 +9,4 @@ public class CloudStorageDemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(CloudStorageDemoApplication.class, args);
     }
-
 }
