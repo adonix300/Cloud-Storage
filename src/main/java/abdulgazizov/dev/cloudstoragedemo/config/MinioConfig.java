@@ -1,28 +1,21 @@
 package abdulgazizov.dev.cloudstoragedemo.config;
 
+import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
 public class MinioConfig {
-    @Value("${minio.url}")
-    private String endpoint;
-
-    @Value("${minio.accessKey}")
-    private String accessKey;
-
-    @Value("${minio.secretKey}")
-    private String secretKey;
+    private final MinioProperties minioProperties;
 
     @Bean
     public MinioClient minioClient() {
         return MinioClient.builder()
-                .endpoint(endpoint)
-                .credentials(accessKey, secretKey)
+                .endpoint(minioProperties.url())
+                .credentials(minioProperties.accessKey(), minioProperties.secretKey())
                 .build();
     }
 }
