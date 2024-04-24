@@ -26,7 +26,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public JwtResponse login(@NonNull JwtRequest request) throws AuthException {
-        final User user = userService.findByUsername(request.getUsername());
+        final User user = userService.getByUsername(request.getUsername());
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(user);
             final String refreshToken = jwtProvider.generateRefreshToken(user);
@@ -43,7 +43,7 @@ public class AuthService {
             final String username = claims.getSubject();
             final String saveRefreshToken = refreshStorage.get(username);
             if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
-                final User user = userService.findByUsername(username);
+                final User user = userService.getByUsername(username);
                 final String accessToken = jwtProvider.generateAccessToken(user);
                 return new JwtResponse(accessToken, null);
             }
@@ -57,7 +57,7 @@ public class AuthService {
             final String username = claims.getSubject();
             final String saveRefreshToken = refreshStorage.get(username);
             if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
-                final User user = userService.findByUsername(username);
+                final User user = userService.getByUsername(username);
                 final String accessToken = jwtProvider.generateAccessToken(user);
                 final String newRefreshToken = jwtProvider.generateRefreshToken(user);
                 refreshStorage.put(username, newRefreshToken);
@@ -65,5 +65,9 @@ public class AuthService {
             }
         }
         throw new AuthException("JWT tokens is not valid");
+    }
+
+    public JwtAuthentication getJwtAuthentication() {
+        return (JwtAuthentication) SecurityContextHolder.getContext().getAuthentication();
     }
 }

@@ -3,12 +3,13 @@ package abdulgazizov.dev.cloudstoragedemo.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
 @Data
-public class User {
+public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
