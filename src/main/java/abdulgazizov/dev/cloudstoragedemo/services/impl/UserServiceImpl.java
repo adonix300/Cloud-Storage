@@ -5,6 +5,7 @@ import abdulgazizov.dev.cloudstoragedemo.entity.Role;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
+import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +23,21 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    public User save(UserDto userDto) {
+    public UserResponse save(UserDto userDto) {
         User user = userMapper.toUser(userDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             user.setRoles(Collections.singleton(Role.ROLE_USER));
         }
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserResponse(savedUser);
     }
 
-    public User findById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+    public UserResponse findById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        return userMapper.toUserResponse(user);
     }
+
 
     @Override
     public User findByUsername(String username) {

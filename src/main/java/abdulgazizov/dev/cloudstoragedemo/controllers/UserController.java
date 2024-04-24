@@ -2,6 +2,7 @@ package abdulgazizov.dev.cloudstoragedemo.controllers;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.UserDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
+import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,13 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("register")
-    public ResponseEntity<User> register(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserResponse> register(@RequestBody UserDto userDto) {
         return ResponseEntity.ok(userService.save(userDto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("get/{id}")
-    public ResponseEntity<User> findById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 }
