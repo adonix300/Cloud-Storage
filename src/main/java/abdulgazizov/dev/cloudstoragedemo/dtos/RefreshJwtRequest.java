@@ -1,4 +1,4 @@
-package abdulgazizov.dev.cloudstoragedemo.jwt;
+package abdulgazizov.dev.cloudstoragedemo.dtos;
 
 import lombok.Data;
 

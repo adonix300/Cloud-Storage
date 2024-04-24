@@ -2,7 +2,7 @@ package abdulgazizov.dev.cloudstoragedemo.controllers;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.JwtRequest;
 import abdulgazizov.dev.cloudstoragedemo.responses.JwtResponse;
-import abdulgazizov.dev.cloudstoragedemo.jwt.RefreshJwtRequest;
+import abdulgazizov.dev.cloudstoragedemo.dtos.RefreshJwtRequest;
 import abdulgazizov.dev.cloudstoragedemo.services.impl.AuthService;
 import jakarta.security.auth.message.AuthException;
 import lombok.RequiredArgsConstructor;
