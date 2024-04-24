@@ -18,13 +18,18 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("register")
-    public ResponseEntity<UserResponse> register(@RequestBody UserDto userDto) {
-        return ResponseEntity.ok(userService.save(userDto));
+    public ResponseEntity<UserResponse> register(@RequestBody User user) {
+        return ResponseEntity.ok(userService.save(user));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("get/{id}")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
+    }
+
+    @GetMapping("myprofile")
+    public ResponseEntity<UserResponse> myProfile() {
+        return ResponseEntity.ok(userService.myProfile());
     }
 }

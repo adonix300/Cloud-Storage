@@ -27,7 +27,6 @@ public class AuthService {
 
     public JwtResponse login(@NonNull JwtRequest request) throws AuthException {
         final User user = userService.findByUsername(request.getUsername());
-//        if(user.getPassword().equals(request.getPassword())) {
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(user);
             final String refreshToken = jwtProvider.generateRefreshToken(user);
@@ -66,9 +65,5 @@ public class AuthService {
             }
         }
         throw new AuthException("JWT tokens is not valid");
-    }
-
-    public JwtAuthentication getAuthInfo() {
-        return (JwtAuthentication) SecurityContextHolder.getContext().getAuthentication();
     }
 }
