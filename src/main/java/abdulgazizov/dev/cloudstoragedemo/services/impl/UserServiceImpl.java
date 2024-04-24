@@ -1,6 +1,5 @@
 package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
-import abdulgazizov.dev.cloudstoragedemo.dtos.UserDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.Role;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtAuthentication;
