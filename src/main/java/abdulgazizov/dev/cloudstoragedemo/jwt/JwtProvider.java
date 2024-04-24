@@ -1,4 +1,4 @@
-package abdulgazizov.dev.cloudstoragedemo.services.impl;
+package abdulgazizov.dev.cloudstoragedemo.jwt;
 
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import io.jsonwebtoken.*;

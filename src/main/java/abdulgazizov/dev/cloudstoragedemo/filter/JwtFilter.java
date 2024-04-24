@@ -1,7 +1,7 @@
 package abdulgazizov.dev.cloudstoragedemo.filter;
 
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtAuthentication;
-import abdulgazizov.dev.cloudstoragedemo.services.impl.JwtProvider;
+import abdulgazizov.dev.cloudstoragedemo.jwt.JwtProvider;
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

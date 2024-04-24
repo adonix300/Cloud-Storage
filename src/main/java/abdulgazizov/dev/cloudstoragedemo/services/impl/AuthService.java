@@ -3,6 +3,7 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 import abdulgazizov.dev.cloudstoragedemo.dtos.JwtRequest;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtAuthentication;
+import abdulgazizov.dev.cloudstoragedemo.jwt.JwtProvider;
 import abdulgazizov.dev.cloudstoragedemo.responses.JwtResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import io.jsonwebtoken.Claims;
