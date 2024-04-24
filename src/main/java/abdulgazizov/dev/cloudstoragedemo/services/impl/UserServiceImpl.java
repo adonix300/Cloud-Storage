@@ -3,6 +3,7 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 import abdulgazizov.dev.cloudstoragedemo.dtos.UserDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.Role;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
+import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,8 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -20,14 +20,14 @@ import java.util.Set;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public User save(UserDto userDto) {
-        User user = new User();
-        user.setUsername(userDto.getUsername());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.ROLE_USER);
-        user.setRoles(roles);
+        User user = userMapper.toUser(userDto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.setRoles(Collections.singleton(Role.ROLE_USER));
+        }
         return userRepository.save(user);
     }
 
