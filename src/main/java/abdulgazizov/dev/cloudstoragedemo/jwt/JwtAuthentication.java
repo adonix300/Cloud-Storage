@@ -15,6 +15,7 @@ public class JwtAuthentication implements Authentication {
     private boolean authenticated;
     private String username;
     private String password;
+    private Long id;
     private Set<Role> roles;
 
     @Override
