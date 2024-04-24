@@ -40,13 +40,15 @@ public class UserController {
     @DeleteMapping("delete")
     public ResponseEntity<Void> deleteMyProfile() {
         Long id = authService.getJwtAuthentication().getId();
-        userService.delete(id);
+        String username = authService.getJwtAuthentication().getUsername();
+        userService.delete(id, username);
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @PatchMapping("update")
+    @PostMapping("update")
     public ResponseEntity<UserResponse> update(@RequestBody User user) {
-        return ResponseEntity.ok(userService.update(user));
+        Long id = authService.getJwtAuthentication().getId();
+        return ResponseEntity.ok(userService.update(id, user));
     }
 }

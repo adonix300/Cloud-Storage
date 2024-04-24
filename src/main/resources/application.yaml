@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: CloudStorageDemo
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cloud_storage
+    username: postgres
+    password: postgres
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: YXNoYWV0cmhzZXNkaHNkaDJRMzJSQUNBU0Q=
+  cache:
+    type: redis
+    cache-names: redis-cache
+
+jwt:
+  secret:
+    access: U0RTRkZkZ3Nuc2duc3RuZGZuZGZnbmRmZ25kZm5kZm5kZmduZGZuZA==
+    refresh: YXNkZ2hzZXRodHJ3aGU2NTQ1NjMzbmRibiBkYXNyZ2VhcmdlcWE=
+
+minio:
+  url: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: files
+

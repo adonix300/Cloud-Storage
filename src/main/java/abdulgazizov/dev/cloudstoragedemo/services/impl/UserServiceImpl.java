@@ -2,7 +2,6 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
 import abdulgazizov.dev.cloudstoragedemo.entity.Role;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
-import abdulgazizov.dev.cloudstoragedemo.jwt.JwtAuthentication;
 import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
 import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
@@ -15,7 +14,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +32,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @Caching(cacheable = {
-            @Cacheable(value = "UserService::getById", key = "#user.id"),
             @Cacheable(value = "UserService::getByUsername", key = "#user.username")
     })
     public UserResponse create(User user) {
@@ -61,24 +58,42 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "UserService::getByUsername", key = "#username")
-    public User getByUsername(String username) {
+    public UserResponse getByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public User getUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
     }
 
     @Override
     @Transactional
     @Caching(put = {
-            @CachePut(value = "UserService::getByUsername", key = "#user.username"),
-            @CachePut(value = "UserService::getById", key = "user.id")
+            @CachePut(value = "UserService::getById", key = "#id"),
+            @CachePut(value = "UserService::getByUsername", key = "#user.username")
     })
-    public UserResponse update(User user) {
-        User existingUser = userRepository.findById(user.getId())
+    public UserResponse update(Long id, User user) {
+        User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
 
-        existingUser.setUsername(user.getUsername());
-        existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        existingUser.setRoles(user.getRoles());
-        existingUser.setFiles(user.getFiles());
+        if (user.getUsername() != null && !user.getUsername().equals(existingUser.getUsername())) {
+            existingUser.setUsername(user.getUsername());
+        }
+
+        if (user.getPassword() != null && !passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        if (user.getRoles() != null && !existingUser.getRoles().equals(user.getRoles())) {
+            existingUser.setRoles(user.getRoles());
+        }
+
+        if (user.getFiles() != null && !existingUser.getFiles().equals(user.getFiles())) {
+            existingUser.setFiles(user.getFiles());
+        }
 
         User savedUser = userRepository.save(existingUser);
         return userMapper.toResponse(savedUser);
@@ -92,8 +107,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "UserService::getById", key = "#id")
-    public void delete(Long id) {
+    @Caching(evict = {
+            @CacheEvict(value = "UserService::getById", key = "#id"),
+            @CacheEvict(value = "UserService::getByUsername", key = "#username")
+    })
+    public void delete(Long id, String username) {
         userRepository.deleteById(id);
     }
 
