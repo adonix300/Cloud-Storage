@@ -17,7 +17,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 
@@ -71,10 +70,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @Caching(put = {
-            @CachePut(value = "UserService::getById", key = "#id"),
-            @CachePut(value = "UserService::getByUsername", key = "#user.username")
-    })
     public UserResponse update(Long id, User user) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
@@ -96,13 +91,8 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(existingUser);
+        updateUserCache(savedUser);
         return userMapper.toResponse(savedUser);
-    }
-
-    @Override
-    @Transactional
-    public void uploadFile(Long id, MultipartFile file) {
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
     }
 
     @Override
@@ -115,4 +105,20 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public void saveFileForUser(Long id, String fileName) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        user.getFiles().add(fileName);
+        User updatedUser = userRepository.save(user);
+        updateUserCache(updatedUser);
+    }
+
+    @Caching(put = {
+            @CachePut(value = "UserService::getById", key = "#user.id"),
+            @CachePut(value = "UserService::getByUsername", key = "#user.username")
+    })
+    public User updateUserCache(User user) {
+        return user;
+    }
 }

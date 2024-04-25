@@ -3,11 +3,11 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
+import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -15,8 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,9 +23,10 @@ import java.util.UUID;
 public class FileStorageServiceImpl implements FileStorageService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final UserService userService;
 
     @Override
-    public String upload(MultipartFile file) {
+    public String upload(MultipartFile file, Long id) {
         try {
             createBucket();
         } catch (Exception e) {
@@ -40,11 +39,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         InputStream inputStream;
         try {
             inputStream = file.getInputStream();
-
         } catch (IOException e) {
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
         saveFile(inputStream, fileName);
+        userService.saveFileForUser(id, fileName);
         return fileName;
     }
 

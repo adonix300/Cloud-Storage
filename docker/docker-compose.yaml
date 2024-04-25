@@ -26,3 +26,16 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass YXNoYWV0cmhzZXNkaHNkaDJRMzJSQUNBU0Q=
     volumes:
       - cache:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address :9090
+    ports:
+      - '9090:9090'
+      - '9000:9000'
+    volumes:
+      - minio-data:/data
