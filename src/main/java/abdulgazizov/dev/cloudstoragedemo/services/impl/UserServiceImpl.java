@@ -29,10 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    @Transactional
-    @Caching(cacheable = {
-            @Cacheable(value = "UserService::getByUsername", key = "#user.username")
-    })
+    @CachePut(value = "users", key = "#result.username")
     public UserResponse create(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new EntityExistsException("Username already exists");
@@ -47,7 +44,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "UserService::getById", key = "#id")
+    @Cacheable(value = "users", key = "#id")
     public UserResponse getById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
         return userMapper.toResponse(user);
@@ -56,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "UserService::getByUsername", key = "#username")
+    @Cacheable(value = "users", key = "#username")
     public UserResponse getByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
         return userMapper.toResponse(user);
@@ -70,11 +67,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(
+            put = {@CachePut(value = "users", key = "#result.username"),
+                    @CachePut(value = "users", key = "#id")},
+            evict = {@CacheEvict(value = "users", key = "#user.username", condition = "#user.username != #result.username"),
+                    @CacheEvict(value = "users", key = "#id")}
+    )
     public UserResponse update(Long id, User user) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
 
         if (user.getUsername() != null && !user.getUsername().equals(existingUser.getUsername())) {
+            if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+                throw new EntityExistsException("Username already exists");
+            }
             existingUser.setUsername(user.getUsername());
         }
 
@@ -91,15 +97,14 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(existingUser);
-        updateUserCache(savedUser);
         return userMapper.toResponse(savedUser);
     }
 
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "UserService::getById", key = "#id"),
-            @CacheEvict(value = "UserService::getByUsername", key = "#username")
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "users", key = "#username")
     })
     public void delete(Long id, String username) {
         userRepository.deleteById(id);
@@ -107,18 +112,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void saveFileForUser(Long id, String fileName) {
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "users", key = "#result.username")
+    })
+    public User saveFileForUser(Long id, String fileName) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
         user.getFiles().add(fileName);
-        User updatedUser = userRepository.save(user);
-        updateUserCache(updatedUser);
-    }
-
-    @Caching(put = {
-            @CachePut(value = "UserService::getById", key = "#user.id"),
-            @CachePut(value = "UserService::getByUsername", key = "#user.username")
-    })
-    public User updateUserCache(User user) {
-        return user;
+        return userRepository.save(user);
     }
 }

@@ -16,5 +16,5 @@ public interface UserService {
 
     User getUserByUsername(String username);
 
-    void saveFileForUser(Long id, String fileName);
+    User saveFileForUser(Long id, String fileName);
 }
