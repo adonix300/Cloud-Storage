@@ -1,10 +1,13 @@
 package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
+import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
+import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import io.minio.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -72,10 +76,16 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void delete(String fileName) throws IOException {
+    public void delete(String fileName, Long id) throws IOException {
+        User user = userService.getById(id);
+        checkUserHasFile(user, fileName);
+
         try {
             findObject(fileName);
             removeFile(fileName);
+
+            user.getFiles().remove(fileName);
+            userService.update(id, user);
             log.info("File deleted successfully: {}", fileName);
         } catch (Exception e) {
             log.error("Error deleting file: {}", e.getMessage());
@@ -84,18 +94,25 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void editFileName(String oldFileName, String newFileName) throws IOException {
+    public void editFileName(String oldFileName, String newFileName, Long id) throws IOException {
+        User user = userService.getById(id);
+        checkUserHasFile(user, oldFileName);
+
         try {
             findObject(oldFileName);
             copyObject(oldFileName, newFileName);
             removeFile(oldFileName);
+
+            user.getFiles().remove(oldFileName);
+//            userService.saveFileForUser(id, newFileName);
+            userService.update(id,user);
+            userService.saveFileForUser(id, newFileName);
 
             log.info("File renamed successfully from {} to {}", oldFileName, newFileName);
         } catch (Exception e) {
             log.error("Error renaming file: {}", e.getMessage());
             throw new IOException("Failed to rename file: " + e.getMessage(), e);
         }
-
     }
 
     @SneakyThrows
@@ -108,6 +125,13 @@ public class FileStorageServiceImpl implements FileStorageService {
                         .build())
                 .object(newFileName)
                 .build());
+    }
+
+    private void checkUserHasFile(User user, String fileName) throws AccessDeniedException {
+        if (!user.getFiles().contains(fileName)) {
+            log.error("File deletion attempt failed: User {} does not own the file {}", user.getUsername(), fileName);
+            throw new AccessDeniedException("You do not have permission to delete this file");
+        }
     }
 
 
@@ -165,4 +189,3 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 }
-

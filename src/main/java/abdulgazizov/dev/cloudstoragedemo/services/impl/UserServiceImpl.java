@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @CachePut(value = "users", key = "#result.username")
-    public UserResponse create(User user) {
+    public User create(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new EntityExistsException("Username already exists");
         }
@@ -38,31 +38,23 @@ public class UserServiceImpl implements UserService {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             user.setRoles(Collections.singleton(Role.ROLE_USER));
         }
-        User savedUser = userRepository.save(user);
-        return userMapper.toResponse(savedUser);
+        return userRepository.save(user);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "users", key = "#id")
-    public UserResponse getById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-        return userMapper.toResponse(user);
+    public User getById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
     }
 
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "users", key = "#username")
-    public UserResponse getByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
-        return userMapper.toResponse(user);
-    }
-
-    @Override
-    @Transactional
-    public User getUserByUsername(String username) {
+    public User getByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
+
     }
 
     @Override
@@ -73,7 +65,7 @@ public class UserServiceImpl implements UserService {
             evict = {@CacheEvict(value = "users", key = "#user.username", condition = "#user.username != #result.username"),
                     @CacheEvict(value = "users", key = "#id")}
     )
-    public UserResponse update(Long id, User user) {
+    public User update(Long id, User user) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
 
@@ -96,8 +88,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setFiles(user.getFiles());
         }
 
-        User savedUser = userRepository.save(existingUser);
-        return userMapper.toResponse(savedUser);
+        return userRepository.save(existingUser);
     }
 
     @Override

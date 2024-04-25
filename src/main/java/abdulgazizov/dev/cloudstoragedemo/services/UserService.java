@@ -4,17 +4,16 @@ import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 
 public interface UserService {
-    UserResponse create(User user);
+    User create(User user);
 
-    UserResponse getById(Long id);
+    User getById(Long id);
 
-    UserResponse getByUsername(String username);
+    User getByUsername(String username);
 
-    UserResponse update(Long id, User user);
+    User update(Long id, User user);
 
     void delete(Long id, String username);
 
-    User getUserByUsername(String username);
 
     User saveFileForUser(Long id, String fileName);
 }

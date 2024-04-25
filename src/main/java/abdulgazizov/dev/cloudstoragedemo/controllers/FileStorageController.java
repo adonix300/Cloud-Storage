@@ -56,8 +56,9 @@ public class FileStorageController {
 
     @DeleteMapping("delete/{fileName}")
     public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
+        Long userId = authService.getJwtAuthentication().getId();
         try {
-            fileStorageService.delete(fileName);
+            fileStorageService.delete(fileName, userId);
             return ResponseEntity.ok("File deleted successfully");
         } catch (IOException e) {
             log.error("Failed to delete file: {}", e.getMessage());
@@ -65,6 +66,15 @@ public class FileStorageController {
         }
     }
 
-    @PostMapping("edit}")
-    public ResponseEntity<String> editFileName()
+    @PostMapping("edit/")
+    public ResponseEntity<String> editFileName(@RequestParam("oldFileName") String oldFileName, @RequestParam("newFileName") String newFileName){
+        Long userId = authService.getJwtAuthentication().getId();
+        try {
+            fileStorageService.editFileName(oldFileName, newFileName, userId);
+            return ResponseEntity.ok("File edited successfully");
+        } catch (IOException e) {
+            log.error("Failed to edit file: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Failed to edit file: " + e.getMessage());
+        }
+    }
 }

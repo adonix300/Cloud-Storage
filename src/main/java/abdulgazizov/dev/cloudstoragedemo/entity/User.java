@@ -28,7 +28,7 @@ public class User implements Serializable {
     @Column(name = "role_name")
     private Set<Role> roles;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_files", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "file_name")
     private Set<String> files;

@@ -1,6 +1,7 @@
 package abdulgazizov.dev.cloudstoragedemo.controllers;
 
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
+import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import abdulgazizov.dev.cloudstoragedemo.services.impl.AuthService;
@@ -17,23 +18,27 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final AuthService authService;
+    private final UserMapper userMapper;
 
     @PostMapping("register")
     public ResponseEntity<UserResponse> register(@RequestBody User user) {
-        return ResponseEntity.ok(userService.create(user));
+        User createdUser = userService.create(user);
+        return ResponseEntity.ok(userMapper.toResponse(createdUser));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("get/{id}")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getById(id));
+        User user = userService.getById(id);
+        return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("myprofile")
     public ResponseEntity<UserResponse> myProfile() {
         Long id = authService.getJwtAuthentication().getId();
-        return ResponseEntity.ok(userService.getById(id));
+        User user = userService.getById(id);
+        return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
@@ -49,6 +54,7 @@ public class UserController {
     @PostMapping("update")
     public ResponseEntity<UserResponse> update(@RequestBody User user) {
         Long id = authService.getJwtAuthentication().getId();
-        return ResponseEntity.ok(userService.update(id, user));
+        User userToUpdate = userService.update(id, user);
+        return ResponseEntity.ok(userMapper.toResponse(userToUpdate));
     }
 }
