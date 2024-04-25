@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,9 +21,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        log.error("Internal server error: {}", ex.getMessage(), ex);
-        ErrorResponse error = new ErrorResponse("Internal server error", "An unexpected error occurred");
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
+        log.error("Internal server error: {}", e.getMessage(), e);
+        ErrorResponse error = new ErrorResponse("Internal server error", e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(IOException e) {
+        log.error("IO exception occurred: {}", e.getMessage(), e);
+        ErrorResponse error = new ErrorResponse("IO exception occurred", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
