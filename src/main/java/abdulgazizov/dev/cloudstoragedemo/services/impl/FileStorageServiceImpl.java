@@ -39,18 +39,22 @@ public class FileStorageServiceImpl implements FileStorageService {
             log.error("Error creating bucket: {}", e.getMessage());
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
+
         if (file.isEmpty() || file.getOriginalFilename() == null) {
             log.error("File is empty");
             throw new FileUploadException("File is empty");
         }
+
         String fileName = generateFileName(file);
         InputStream inputStream;
+
         try {
             inputStream = file.getInputStream();
         } catch (IOException e) {
             log.error("Error reading file input stream: {}", e.getMessage());
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
+
         saveFile(inputStream, fileName);
         userService.saveFileForUser(id, fileName);
         log.info("File uploaded successfully: {}", fileName);

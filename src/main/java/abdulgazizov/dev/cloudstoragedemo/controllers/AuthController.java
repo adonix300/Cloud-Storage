@@ -16,19 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/auth")
+@RequestMapping("auth")
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest) {
-        try {
-            final JwtResponse token = authService.login(jwtRequest);
-            return ResponseEntity.ok(token);
-        } catch (AuthException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest) throws AuthException {
+        final JwtResponse token = authService.login(jwtRequest);
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("token")
@@ -38,13 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("refresh")
-    public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshJwtRequest jwtRequest) {
-        try {
-            final JwtResponse token = authService.refresh(jwtRequest.getRefreshToken());
-            return ResponseEntity.ok(token);
-        } catch (AuthException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+    public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshJwtRequest jwtRequest) throws AuthException {
+        final JwtResponse token = authService.refresh(jwtRequest.getRefreshToken());
+        return ResponseEntity.ok(token);
     }
 }

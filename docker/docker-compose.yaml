@@ -9,7 +9,7 @@ volumes:
 
 services:
   db:
-    image: postgres:latest
+    image: postgres:16-alpine
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
@@ -18,7 +18,7 @@ services:
       - "5432:5432"
 
   redis:
-    image: redis:7.2-rc-alpine
+    image: redis:7.2-alpine
     restart: always
     container_name: redis
     ports:
