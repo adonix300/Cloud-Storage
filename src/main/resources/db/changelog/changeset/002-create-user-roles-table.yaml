@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-user-roles
+      author: Danis Abdulgazizov
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_roles_users
+                    references: users(id)
+              - column:
+                  name: role_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
