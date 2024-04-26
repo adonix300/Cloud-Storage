@@ -104,7 +104,6 @@ public class FileStorageServiceImpl implements FileStorageService {
             removeFile(oldFileName);
 
             user.getFiles().remove(oldFileName);
-//            userService.saveFileForUser(id, newFileName);
             userService.update(id,user);
             userService.saveFileForUser(id, newFileName);
 
