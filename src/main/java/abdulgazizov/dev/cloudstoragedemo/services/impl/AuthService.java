@@ -27,7 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public JwtResponse login(@NonNull JwtRequest request) throws BadCredentialsException {
-        final User user = userService.getByUsername(request.getUsername());
+        final User user = userService.getByUsername(request.getLogin());
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(user);
             final String refreshToken = jwtProvider.generateRefreshToken(user);

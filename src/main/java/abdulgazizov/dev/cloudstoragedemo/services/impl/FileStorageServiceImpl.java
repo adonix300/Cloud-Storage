@@ -1,5 +1,6 @@
 package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
+import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
@@ -7,9 +8,11 @@ import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserFileService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import io.minio.*;
+import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,10 +35,11 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final MinioProperties minioProperties;
     private final UserService userService;
     private final UserFileService userFileService;
+    private final AuthService authService;
 
     @Override
-    public String upload(MultipartFile file, Long id, String fileName) {
-
+    public String upload(MultipartFile file, String fileName) {
+        Long id = authService.getJwtAuthentication().getId();
         createBucket();
 
         if (file.isEmpty() || file.getOriginalFilename() == null) {
@@ -60,35 +66,47 @@ public class FileStorageServiceImpl implements FileStorageService {
         return fileName;
     }
 
-//    @Override
-//    public String upload(MultipartFile file, String fileName, Long id) {
-//        try {
-//            createBucket();
-//        } catch (Exception e) {
-//            log.error("Error creating bucket: {}", e.getMessage());
-//            throw new FileUploadException("File upload failed: " + e.getMessage());
-//        }
-//
-//        if (file.isEmpty() || fileName == null) {
-//            log.error("File is empty or no file name provided");
-//            throw new FileUploadException("File is empty or no file name provided");
-//        }
-//
-//        InputStream inputStream;
-//
-//        try {
-//            inputStream = file.getInputStream();
-//        } catch (IOException e) {
-//            log.error("Error reading file input stream: {}", e.getMessage());
-//            throw new FileUploadException("File upload failed: " + e.getMessage());
-//        }
-//
-//        saveFile(inputStream, fileName);
-//        userFileService.addFileToUser(id, fileName);
-//        log.info("File uploaded successfully: {}", fileName);
-//        return fileName;
-//    }
+    @Override
+    @SneakyThrows
+    public List<FileDto> getFiles(int limit) throws BadRequestException {
+        if (limit <= 0) {
+            throw new BadRequestException("Limit must be greater than 0");
+        }
+        List<FileDto> files = new ArrayList<>();
+        try {
+            Iterable<Result<Item>> items = minioClient.listObjects(ListObjectsArgs.builder()
+                    .bucket(minioProperties.bucketName())
+                    .build());
 
+            int count = 0;
+
+            for (Result<Item> item : items) {
+                if (count >= limit) {
+                    break;
+                }
+                Item fileItem = item.get();
+
+                FileDto fileDto = new FileDto();
+                fileDto.setFileName(fileItem.objectName());
+                fileDto.setSize(fileItem.size());
+                fileDto.setFileType(determineFileType(fileItem.objectName()));
+
+                files.add(fileDto);
+                count++;
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving file list: {}", e.getMessage());
+            throw new RuntimeException("Failed to retrieve files: " + e.getMessage(), e);
+        }
+        return files;
+    }
+
+    private String determineFileType(String fileName) {
+        if (fileName.contains(".")) {
+            return fileName.substring(fileName.lastIndexOf(".") + 1);
+        }
+        return "unknown"; // Или можно вернуть null, если необходимо
+    }
 
     @Override
     public Resource download(String fileName) throws IOException {
@@ -109,7 +127,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void delete(String fileName, Long id) throws IOException {
+    public void delete(String fileName) throws IOException {
+        Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
         checkUserHasFile(user, fileName);
 
@@ -126,10 +145,10 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void editFileName(String oldFileName, String newFileName, Long id) throws IOException {
+    public void editFileName(String newFileName, String oldFileName) throws IOException {
+        Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
         checkUserHasFile(user, oldFileName);
-
         try {
             findObject(oldFileName);
             copyObject(oldFileName, newFileName);
