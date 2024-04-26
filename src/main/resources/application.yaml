@@ -20,6 +20,9 @@ spring:
     enabled: true
     change-log: db/changelog/db.changelog-master.yaml
 
+server:
+  port: 8081
+
 jwt:
   secret:
     access: U0RTRkZkZ3Nuc2duc3RuZGZuZGZnbmRmZ25kZm5kZm5kZmduZGZuZA==
