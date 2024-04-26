@@ -2,6 +2,7 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.JwtRequest;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
+import abdulgazizov.dev.cloudstoragedemo.exceptions.BadCredentialsException;
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtAuthentication;
 import abdulgazizov.dev.cloudstoragedemo.jwt.JwtProvider;
 import abdulgazizov.dev.cloudstoragedemo.responses.JwtResponse;
@@ -25,7 +26,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public JwtResponse login(@NonNull JwtRequest request) throws AuthException {
+    public JwtResponse login(@NonNull JwtRequest request) throws BadCredentialsException {
         final User user = userService.getByUsername(request.getUsername());
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(user);
@@ -33,7 +34,7 @@ public class AuthService {
             refreshStorage.put(user.getUsername(), refreshToken);
             return new JwtResponse(accessToken, refreshToken);
         } else {
-            throw new AuthException("Password is wrong");
+            throw new BadCredentialsException("Password is wrong");
         }
     }
 

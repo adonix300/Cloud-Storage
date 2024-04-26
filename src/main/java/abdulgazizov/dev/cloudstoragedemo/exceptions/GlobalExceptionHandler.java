@@ -4,6 +4,7 @@ package abdulgazizov.dev.cloudstoragedemo.exceptions;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,17 +23,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
-        log.error("Internal server error: {}", e.getMessage(), e);
-        ErrorResponse error = new ErrorResponse("Internal server error", e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ErrorResponse> handleIOException(IOException e) {
-        log.error("IO exception occurred: {}", e.getMessage(), e);
-        ErrorResponse error = new ErrorResponse("IO exception occurred", e.getMessage());
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadCredentialsException e) {
+        log.error("Bad request: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse("Bad request", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -56,4 +50,19 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse("Access denied", e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(IOException e) {
+        log.error("IO exception occurred: {}", e.getMessage(), e);
+        ErrorResponse error = new ErrorResponse("IO exception occurred", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
+        log.error("Internal server error: {}", e.getMessage(), e);
+        ErrorResponse error = new ErrorResponse("Internal server error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
 }

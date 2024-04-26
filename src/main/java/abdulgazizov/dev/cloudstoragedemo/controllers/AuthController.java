@@ -2,6 +2,7 @@ package abdulgazizov.dev.cloudstoragedemo.controllers;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.JwtRequest;
 import abdulgazizov.dev.cloudstoragedemo.dtos.RefreshJwtRequest;
+import abdulgazizov.dev.cloudstoragedemo.exceptions.BadCredentialsException;
 import abdulgazizov.dev.cloudstoragedemo.responses.JwtResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.impl.AuthService;
 import jakarta.security.auth.message.AuthException;
@@ -21,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest) throws AuthException {
+    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest) throws BadCredentialsException {
         final JwtResponse token = authService.login(jwtRequest);
         return ResponseEntity.ok(token);
     }

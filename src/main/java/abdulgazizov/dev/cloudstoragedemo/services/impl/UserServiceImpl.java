@@ -2,9 +2,7 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
 import abdulgazizov.dev.cloudstoragedemo.entity.Role;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
-import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
-import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,7 +24,6 @@ import java.util.Collections;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
 
     @Override
     @CachePut(value = "users", key = "#result.username")
@@ -99,17 +96,5 @@ public class UserServiceImpl implements UserService {
     })
     public void delete(Long id, String username) {
         userRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "users", key = "#id"),
-            @CacheEvict(value = "users", key = "#result.username")
-    })
-    public User saveFileForUser(Long id, String fileName) {
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-        user.getFiles().add(fileName);
-        return userRepository.save(user);
     }
 }

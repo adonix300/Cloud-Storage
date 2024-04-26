@@ -24,16 +24,17 @@ public class FileStorageController {
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PostMapping("upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("fileName") String customFileName) {
         if (file.isEmpty()) {
             log.error("No file provided");
             return ResponseEntity.badRequest().body("No file provided");
         }
         Long userId = authService.getJwtAuthentication().getId();
-        String fileName = fileStorageService.upload(file, userId);
+        String fileName = fileStorageService.upload(file, userId, customFileName);
         log.info("File uploaded successfully: {}", fileName);
         return ResponseEntity.ok("File uploaded successfully: " + fileName);
     }
+
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("download/{fileName}")

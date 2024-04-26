@@ -32,20 +32,19 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final UserFileService userFileService;
 
     @Override
-    public String upload(MultipartFile file, Long id) {
-        try {
-            createBucket();
-        } catch (Exception e) {
-            log.error("Error creating bucket: {}", e.getMessage());
-            throw new FileUploadException("File upload failed: " + e.getMessage());
-        }
+    public String upload(MultipartFile file, Long id, String fileName) {
+
+        createBucket();
 
         if (file.isEmpty() || file.getOriginalFilename() == null) {
             log.error("File is empty");
             throw new FileUploadException("File is empty");
         }
 
-        String fileName = generateFileName(file);
+        if (Objects.isNull(fileName) || fileName.isEmpty()) {
+            fileName = generateFileName(file);
+        }
+
         InputStream inputStream;
 
         try {
@@ -60,6 +59,36 @@ public class FileStorageServiceImpl implements FileStorageService {
         log.info("File uploaded successfully: {}", fileName);
         return fileName;
     }
+
+//    @Override
+//    public String upload(MultipartFile file, String fileName, Long id) {
+//        try {
+//            createBucket();
+//        } catch (Exception e) {
+//            log.error("Error creating bucket: {}", e.getMessage());
+//            throw new FileUploadException("File upload failed: " + e.getMessage());
+//        }
+//
+//        if (file.isEmpty() || fileName == null) {
+//            log.error("File is empty or no file name provided");
+//            throw new FileUploadException("File is empty or no file name provided");
+//        }
+//
+//        InputStream inputStream;
+//
+//        try {
+//            inputStream = file.getInputStream();
+//        } catch (IOException e) {
+//            log.error("Error reading file input stream: {}", e.getMessage());
+//            throw new FileUploadException("File upload failed: " + e.getMessage());
+//        }
+//
+//        saveFile(inputStream, fileName);
+//        userFileService.addFileToUser(id, fileName);
+//        log.info("File uploaded successfully: {}", fileName);
+//        return fileName;
+//    }
+
 
     @Override
     public Resource download(String fileName) throws IOException {
@@ -88,8 +117,6 @@ public class FileStorageServiceImpl implements FileStorageService {
             findObject(fileName);
             removeFile(fileName);
 
-//            user.getFiles().remove(fileName);
-//            userService.update(id, user);
             userFileService.removeFileFromUser(id, fileName);
             log.info("File deleted successfully: {}", fileName);
         } catch (Exception e) {
@@ -108,8 +135,6 @@ public class FileStorageServiceImpl implements FileStorageService {
             copyObject(oldFileName, newFileName);
             removeFile(oldFileName);
 
-//            user.getFiles().remove(oldFileName);
-//            userService.update(id, user);
             userFileService.removeFileFromUser(id, oldFileName);
             userFileService.addFileToUser(id, newFileName);
 
@@ -142,14 +167,19 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @SneakyThrows
     private void createBucket() {
-        boolean found = minioClient.bucketExists(BucketExistsArgs.builder()
-                .bucket(minioProperties.bucketName())
-                .build());
-        if (!found) {
-            minioClient.makeBucket(MakeBucketArgs.builder()
+        try {
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder()
                     .bucket(minioProperties.bucketName())
                     .build());
-            log.info("Bucket created: {}", minioProperties.bucketName());
+            if (!found) {
+                minioClient.makeBucket(MakeBucketArgs.builder()
+                        .bucket(minioProperties.bucketName())
+                        .build());
+                log.info("Bucket created: {}", minioProperties.bucketName());
+            }
+        } catch (Exception e) {
+            log.error("Error creating bucket: {}", e.getMessage());
+            throw new FileUploadException("File upload failed: " + e.getMessage());
         }
     }
 

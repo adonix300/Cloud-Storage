@@ -40,5 +40,4 @@ public class UserFileServiceImpl implements UserFileService {
         user.getFiles().remove(fileName);
         return userRepository.save(user);
     }
-
 }
