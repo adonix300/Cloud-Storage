@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .httpBasic(HttpBasicConfigurer::disable)
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/login", "/api/auth/token", "/user/register").permitAll()
+                        .requestMatchers("/auth/login", "/auth/token", "/user/register").permitAll()
                         .anyRequest().authenticated())
                 .addFilterAt(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

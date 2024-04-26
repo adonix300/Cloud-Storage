@@ -3,11 +3,10 @@ package abdulgazizov.dev.cloudstoragedemo.services.impl;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
-import abdulgazizov.dev.cloudstoragedemo.repositories.UserRepository;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
+import abdulgazizov.dev.cloudstoragedemo.services.UserFileService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
 import io.minio.*;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
     private final UserService userService;
+    private final UserFileService userFileService;
 
     @Override
     public String upload(MultipartFile file, Long id) {
@@ -56,7 +56,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
 
         saveFile(inputStream, fileName);
-        userService.saveFileForUser(id, fileName);
+        userFileService.addFileToUser(id, fileName);
         log.info("File uploaded successfully: {}", fileName);
         return fileName;
     }
@@ -88,8 +88,9 @@ public class FileStorageServiceImpl implements FileStorageService {
             findObject(fileName);
             removeFile(fileName);
 
-            user.getFiles().remove(fileName);
-            userService.update(id, user);
+//            user.getFiles().remove(fileName);
+//            userService.update(id, user);
+            userFileService.removeFileFromUser(id, fileName);
             log.info("File deleted successfully: {}", fileName);
         } catch (Exception e) {
             log.error("Error deleting file: {}", e.getMessage());
@@ -107,9 +108,10 @@ public class FileStorageServiceImpl implements FileStorageService {
             copyObject(oldFileName, newFileName);
             removeFile(oldFileName);
 
-            user.getFiles().remove(oldFileName);
-            userService.update(id,user);
-            userService.saveFileForUser(id, newFileName);
+//            user.getFiles().remove(oldFileName);
+//            userService.update(id, user);
+            userFileService.removeFileFromUser(id, oldFileName);
+            userFileService.addFileToUser(id, newFileName);
 
             log.info("File renamed successfully from {} to {}", oldFileName, newFileName);
         } catch (Exception e) {
