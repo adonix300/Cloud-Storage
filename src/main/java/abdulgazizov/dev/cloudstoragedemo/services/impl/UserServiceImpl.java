@@ -24,6 +24,7 @@ import java.util.Collections;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
     @Override
     @CachePut(value = "users", key = "#result.username")
@@ -58,11 +59,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Caching(
             put = {@CachePut(value = "users", key = "#result.username"),
-                    @CachePut(value = "users", key = "#id")},
+                    @CachePut(value = "users", key = "#result.id")},
             evict = {@CacheEvict(value = "users", key = "#user.username", condition = "#user.username != #result.username"),
-                    @CacheEvict(value = "users", key = "#id")}
+                    @CacheEvict(value = "users", key = "#user.id")}
     )
-    public User update(Long id, User user) {
+    public User update(User user) {
+        Long id = authService.getJwtAuthentication().getId();
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
 
@@ -91,10 +93,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "users", key = "#id"),
             @CacheEvict(value = "users", key = "#username")
     })
-    public void delete(Long id, String username) {
+    public void delete(String username) {
+        Long id = authService.getJwtAuthentication().getId();
         userRepository.deleteById(id);
     }
 }

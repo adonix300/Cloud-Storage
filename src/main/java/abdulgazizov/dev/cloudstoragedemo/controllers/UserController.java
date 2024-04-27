@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-//@RequestMapping("user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -44,17 +43,15 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @DeleteMapping("delete")
     public ResponseEntity<Void> deleteMyProfile() {
-        Long id = authService.getJwtAuthentication().getId();
         String username = authService.getJwtAuthentication().getUsername();
-        userService.delete(id, username);
+        userService.delete(username);
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PostMapping("update")
     public ResponseEntity<UserResponse> update(@RequestBody User user) {
-        Long id = authService.getJwtAuthentication().getId();
-        User userToUpdate = userService.update(id, user);
+        User userToUpdate = userService.update(user);
         return ResponseEntity.ok(userMapper.toResponse(userToUpdate));
     }
 }
