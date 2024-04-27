@@ -69,6 +69,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     @SneakyThrows
     public List<FileDto> getFiles(int limit) throws BadRequestException {
+        Long id = authService.getJwtAuthentication().getId();
+        User user = userService.getById(id);
+
         if (limit <= 0) {
             throw new BadRequestException("Limit must be greater than 0");
         }
@@ -91,8 +94,10 @@ public class FileStorageServiceImpl implements FileStorageService {
                 fileDto.setSize(fileItem.size());
                 fileDto.setFileType(determineFileType(fileItem.objectName()));
 
-                files.add(fileDto);
-                count++;
+                if (user.getFiles().contains(fileDto.getFileName())) {
+                    files.add(fileDto);
+                    count++;
+                }
             }
         } catch (Exception e) {
             log.error("Error retrieving file list: {}", e.getMessage());
