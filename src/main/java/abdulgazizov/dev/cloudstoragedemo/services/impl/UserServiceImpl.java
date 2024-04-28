@@ -8,15 +8,12 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+
 
 @Slf4j
 @Service
@@ -24,79 +21,37 @@ import java.util.Collections;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthService authService;
 
     @Override
-    @CachePut(value = "users", key = "#result.username")
+    @Transactional
     public User create(User user) {
+        log.debug("Creating user: {}", user);
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            log.warn("User already exists: {}", user);
             throw new EntityExistsException("Username already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             user.setRoles(Collections.singleton(Role.ROLE_USER));
         }
-        return userRepository.save(user);
+
+        User createdUser = userRepository.save(user);
+        log.info("User created successfully: {}", createdUser);
+        return createdUser;
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "users", key = "#id")
     public User getById(Long id) {
+        log.debug("Getting user by id: {}", id);
         return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
     }
 
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "users", key = "#username")
     public User getByUsername(String username) {
+        log.debug("Getting user by username: {}", username);
         return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
-
-    }
-
-    @Override
-    @Transactional
-    @Caching(
-            put = {@CachePut(value = "users", key = "#result.username"),
-                    @CachePut(value = "users", key = "#result.id")},
-            evict = {@CacheEvict(value = "users", key = "#user.username", condition = "#user.username != #result.username"),
-                    @CacheEvict(value = "users", key = "#user.id")}
-    )
-    public User update(User user) {
-        Long id = authService.getJwtAuthentication().getId();
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
-
-        if (user.getUsername() != null && !user.getUsername().equals(existingUser.getUsername())) {
-            if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-                throw new EntityExistsException("Username already exists");
-            }
-            existingUser.setUsername(user.getUsername());
-        }
-
-        if (user.getPassword() != null && !passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-
-        if (user.getRoles() != null && !existingUser.getRoles().equals(user.getRoles())) {
-            existingUser.setRoles(user.getRoles());
-        }
-
-        if (user.getFiles() != null && !existingUser.getFiles().equals(user.getFiles())) {
-            existingUser.setFiles(user.getFiles());
-        }
-
-        return userRepository.save(existingUser);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "users", key = "#username")
-    })
-    public void delete(String username) {
-        Long id = authService.getJwtAuthentication().getId();
-        userRepository.deleteById(id);
     }
 }

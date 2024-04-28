@@ -1,8 +1,7 @@
 package abdulgazizov.dev.cloudstoragedemo.services;
 
-import abdulgazizov.dev.cloudstoragedemo.entity.User;
-
 public interface UserFileService {
-    User addFileToUser(Long id, String fileMame);
-    User removeFileFromUser(Long id, String fileMame);
+    void addFileToUser(Long id, String fileMame);
+
+    void removeFileFromUser(Long id, String fileMame);
 }

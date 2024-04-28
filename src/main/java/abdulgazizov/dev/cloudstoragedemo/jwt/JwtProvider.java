@@ -8,7 +8,6 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -28,12 +27,14 @@ public class JwtProvider {
     public JwtProvider(JwtProperties jwtProperties) {
         this.jwtAccessSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.jwtAccessSecret()));
         this.jwtRefreshSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.jwtRefreshSecret()));
+        log.debug("Initialized JwtProvider with access secret {} and refresh secret {}", jwtAccessSecret, jwtRefreshSecret);
     }
 
     public String generateAccessToken(User user) {
         final LocalDateTime now = LocalDateTime.now();
         final Instant acessExpirationInstant = now.plusMinutes(5).atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpirationDate = Date.from(acessExpirationInstant);
+        log.debug("Generating access token for user {}", user.getUsername());
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setExpiration(accessExpirationDate)
@@ -47,6 +48,7 @@ public class JwtProvider {
         final LocalDateTime now = LocalDateTime.now();
         final Instant acessExpirationInstant = now.plusMinutes(30).atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpirationDate = Date.from(acessExpirationInstant);
+        log.debug("Generating refresh token for user {}", user.getUsername());
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setExpiration(accessExpirationDate)
@@ -54,20 +56,23 @@ public class JwtProvider {
                 .compact();
     }
 
-    public boolean validateAccessToken(@NonNull String accessToken) {
+    public boolean validateAccessToken(String accessToken) {
+        log.debug("Validating access token {}", accessToken);
         return validateToken(accessToken, jwtAccessSecret);
     }
 
-    public boolean validateRefreshToken(@NonNull String refreshToken) {
+    public boolean validateRefreshToken(String refreshToken) {
+        log.debug("Validating refresh token {}", refreshToken);
         return validateToken(refreshToken, jwtRefreshSecret);
     }
 
-    private boolean validateToken(@NonNull String token, @NonNull Key secret) {
+    private boolean validateToken(String token, Key secret) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(secret)
                     .build()
                     .parseClaimsJws(token);
+            log.debug("Token {} is valid", token);
             return true;
         } catch (ExpiredJwtException expEx) {
             log.error("Token expired", expEx);
@@ -83,19 +88,24 @@ public class JwtProvider {
         return false;
     }
 
-    public Claims getAccessClaims(@NonNull String token) {
+    public Claims getAccessClaims(String token) {
+        log.debug("Getting access claims for token {}", token);
         return getClaims(token, jwtAccessSecret);
     }
 
-    public Claims getRefreshClaims(@NonNull String token) {
+    public Claims getRefreshClaims(String token) {
+        log.debug("Getting refresh claims for token {}", token);
         return getClaims(token, jwtRefreshSecret);
     }
 
-    private Claims getClaims(@NonNull String token, @NonNull Key secret) {
+    private Claims getClaims(String token, Key secret) {
+        log.debug("Parsing claims for token {}", token);
         return Jwts.parserBuilder()
                 .setSigningKey(secret)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
 }

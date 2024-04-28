@@ -4,54 +4,27 @@ import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.mappers.UserMapper;
 import abdulgazizov.dev.cloudstoragedemo.responses.UserResponse;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
-import abdulgazizov.dev.cloudstoragedemo.services.impl.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.lang.NonNull;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final AuthService authService;
     private final UserMapper userMapper;
 
     @PostMapping("register")
-    public ResponseEntity<UserResponse> register(@RequestBody User user) {
+    public ResponseEntity<UserResponse> register(@RequestBody @NonNull @Valid User user) {
+        log.debug("Received registration request: {}", user);
         User createdUser = userService.create(user);
+        log.info("User registered successfully: {}", createdUser);
         return ResponseEntity.ok(userMapper.toResponse(createdUser));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("get/{id}")
-    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-        User user = userService.getById(id);
-        return ResponseEntity.ok(userMapper.toResponse(user));
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @GetMapping("myprofile")
-    public ResponseEntity<UserResponse> myProfile() {
-        Long id = authService.getJwtAuthentication().getId();
-        User user = userService.getById(id);
-        return ResponseEntity.ok(userMapper.toResponse(user));
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @DeleteMapping("delete")
-    public ResponseEntity<Void> deleteMyProfile() {
-        String username = authService.getJwtAuthentication().getUsername();
-        userService.delete(username);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @PostMapping("update")
-    public ResponseEntity<UserResponse> update(@RequestBody User user) {
-        User userToUpdate = userService.update(user);
-        return ResponseEntity.ok(userMapper.toResponse(userToUpdate));
     }
 }

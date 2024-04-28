@@ -1,8 +1,6 @@
 version: '3'
 
 volumes:
-  cache:
-    driver: local
   minio-data:
     driver: local
 
@@ -16,16 +14,6 @@ services:
       - POSTGRES_DB=cloud_storage
     ports:
       - "5432:5432"
-
-  redis:
-    image: redis:7.2-alpine
-    restart: always
-    container_name: redis
-    ports:
-      - "6379:6379"
-    command: redis-server --save 20 1 --loglevel warning --requirepass YXNoYWV0cmhzZXNkaHNkaDJRMzJSQUNBU0Q=
-    volumes:
-      - cache:/data
 
   minio:
     image: minio/minio:latest

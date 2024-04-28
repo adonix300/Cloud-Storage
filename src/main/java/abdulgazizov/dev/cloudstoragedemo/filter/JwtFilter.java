@@ -30,17 +30,26 @@ public class JwtFilter extends GenericFilterBean {
         log.info("Processing request in JwtFilter");
 
         final String token = getTokenFromRequest((HttpServletRequest) servletRequest);
-        if (token != null && jwtProvider.validateAccessToken(token)) {
-            log.info("Access token is valid");
+        log.debug("Extracted token from request: {}", token);
 
-            final Claims claims = jwtProvider.getAccessClaims(token);
-            final JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
-            jwtInfoToken.setAuthenticated(true);
-            log.info("Authenticated user: {}", jwtInfoToken.getPrincipal());
+        if (token != null) {
+            log.debug("Validating access token: {}", token);
+            if (jwtProvider.validateAccessToken(token)) {
+                log.info("Access token is valid");
 
-            SecurityContextHolder.getContext().setAuthentication(jwtInfoToken);
+                final Claims claims = jwtProvider.getAccessClaims(token);
+                log.debug("Extracted claims from token: {}", claims);
+
+                final JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
+                jwtInfoToken.setAuthenticated(true);
+                log.info("Authenticated user: {}", jwtInfoToken.getPrincipal());
+
+                SecurityContextHolder.getContext().setAuthentication(jwtInfoToken);
+            } else {
+                log.warn("Invalid access token: {}", token);
+            }
         } else {
-            log.info("Invalid access token");
+            log.debug("No token found in request");
         }
 
         filterChain.doFilter(servletRequest, servletResponse);
@@ -48,6 +57,8 @@ public class JwtFilter extends GenericFilterBean {
 
     private String getTokenFromRequest(HttpServletRequest request) {
         final String bearer = request.getHeader(AUTHORIZATION);
+        log.debug("Extracting token from header: {}", bearer);
+
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }

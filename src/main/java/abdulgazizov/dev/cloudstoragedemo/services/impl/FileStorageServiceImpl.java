@@ -4,6 +4,7 @@ import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
+import abdulgazizov.dev.cloudstoragedemo.services.AuthService;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserFileService;
 import abdulgazizov.dev.cloudstoragedemo.services.UserService;
@@ -16,12 +17,14 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,12 +41,14 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final AuthService authService;
 
     @Override
+    @Transactional
     public String upload(MultipartFile file, String fileName) {
+        log.debug("Uploading file: {}, filename: {}", file.getOriginalFilename(), fileName);
         Long id = authService.getJwtAuthentication().getId();
         createBucket();
 
         if (file.isEmpty() || file.getOriginalFilename() == null) {
-            log.error("File is empty");
+            log.warn("File is empty");
             throw new FileUploadException("File is empty");
         }
 
@@ -56,7 +61,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             inputStream = file.getInputStream();
         } catch (IOException e) {
-            log.error("Error reading file input stream: {}", e.getMessage());
+            log.error("Error reading file input stream: {}", e.getMessage(), e);
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
 
@@ -67,12 +72,15 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @SneakyThrows
     public List<FileDto> getFiles(int limit) throws BadRequestException {
+        log.debug("Getting files with limit: {}", limit);
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
 
         if (limit <= 0) {
+            log.warn("Limit must be greater than 0, received: {}", limit);
             throw new BadRequestException("Limit must be greater than 0");
         }
         List<FileDto> files = new ArrayList<>();
@@ -88,11 +96,15 @@ public class FileStorageServiceImpl implements FileStorageService {
                     break;
                 }
                 Item fileItem = item.get();
+                ZonedDateTime lastModified = fileItem.lastModified();
 
-                FileDto fileDto = new FileDto();
-                fileDto.setFileName(fileItem.objectName());
-                fileDto.setSize(fileItem.size());
-                fileDto.setFileType(determineFileType(fileItem.objectName()));
+                FileDto fileDto = FileDto.builder()
+                        .fileName(fileItem.objectName())
+                        .size(fileItem.size())
+                        .fileType(determineFileType(fileItem.objectName()))
+                        .editedAt(lastModified.toInstant().toEpochMilli())
+                        .build();
+
 
                 if (user.getFiles().contains(fileDto.getFileName())) {
                     files.add(fileDto);
@@ -100,9 +112,10 @@ public class FileStorageServiceImpl implements FileStorageService {
                 }
             }
         } catch (Exception e) {
-            log.error("Error retrieving file list: {}", e.getMessage());
+            log.error("Error retrieving file list: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve files: " + e.getMessage(), e);
         }
+        log.info("Files retrieved successfully, count: {}", files.size());
         return files;
     }
 
@@ -114,7 +127,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
+    @Transactional
     public Resource download(String fileName) throws IOException {
+        log.debug("Downloading file: {}", fileName);
         try {
             findObject(fileName);
 
@@ -126,13 +141,15 @@ public class FileStorageServiceImpl implements FileStorageService {
             log.info("File downloaded successfully: {}", fileName);
             return new InputStreamResource(inputStream);
         } catch (Exception e) {
-            log.error("Error downloading file: {}", e.getMessage());
+            log.error("Error downloading file: {}", e.getMessage(), e);
             throw new IOException("Failed to download file: " + e.getMessage(), e);
         }
     }
 
     @Override
+    @Transactional
     public void delete(String fileName) throws IOException {
+        log.debug("Deleting file: {}", fileName);
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
         checkUserHasFile(user, fileName);
@@ -144,13 +161,16 @@ public class FileStorageServiceImpl implements FileStorageService {
             userFileService.removeFileFromUser(id, fileName);
             log.info("File deleted successfully: {}", fileName);
         } catch (Exception e) {
-            log.error("Error deleting file: {}", e.getMessage());
+            log.error("Error deleting file: {}", e.getMessage(), e);
             throw new IOException("Error deleting file: " + e.getMessage());
         }
     }
 
+
     @Override
+    @Transactional
     public void editFileName(String newFileName, String oldFileName) throws IOException {
+        log.debug("Renaming file: oldFilename={}, newFilename={}", oldFileName, newFileName);
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
         checkUserHasFile(user, oldFileName);
@@ -164,10 +184,11 @@ public class FileStorageServiceImpl implements FileStorageService {
 
             log.info("File renamed successfully from {} to {}", oldFileName, newFileName);
         } catch (Exception e) {
-            log.error("Error renaming file: {}", e.getMessage());
+            log.error("Error renaming file: {}", e.getMessage(), e);
             throw new IOException("Failed to rename file: " + e.getMessage(), e);
         }
     }
+
 
     @SneakyThrows
     private void copyObject(String oldFileName, String newFileName) {
@@ -183,14 +204,15 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private void checkUserHasFile(User user, String fileName) throws AccessDeniedException {
         if (!user.getFiles().contains(fileName)) {
-            log.error("File deletion attempt failed: User {} does not own the file {}", user.getUsername(), fileName);
-            throw new AccessDeniedException("You do not have permission to delete this file");
+            log.warn("File access denied: User {} does not own the file {}", user.getUsername(), fileName);
+            throw new AccessDeniedException("You do not have permission to access this file");
         }
     }
 
 
     @SneakyThrows
     private void createBucket() {
+        log.debug("Creating bucket: {}", minioProperties.bucketName());
         try {
             boolean found = minioClient.bucketExists(BucketExistsArgs.builder()
                     .bucket(minioProperties.bucketName())
@@ -202,7 +224,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 log.info("Bucket created: {}", minioProperties.bucketName());
             }
         } catch (Exception e) {
-            log.error("Error creating bucket: {}", e.getMessage());
+            log.error("Error creating bucket: {}", e.getMessage(), e);
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
     }
@@ -210,6 +232,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @SneakyThrows
     private void saveFile(InputStream inputStream, String fileName) {
+        log.debug("Saving file: {}", fileName);
         minioClient.putObject(PutObjectArgs.builder()
                 .stream(inputStream, inputStream.available(), -1)
                 .bucket(minioProperties.bucketName())
@@ -218,11 +241,13 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     private String generateFileName(MultipartFile file) {
+        log.debug("Generating file name: {}", file.getOriginalFilename());
         String extension = getExtension(file);
         return UUID.randomUUID() + "." + extension;
     }
 
     private String getExtension(MultipartFile file) {
+        log.debug("Getting extension for file: {}", file.getOriginalFilename());
         return Objects.requireNonNull(file.getOriginalFilename())
                 .substring(file.getOriginalFilename().lastIndexOf(".") + 1);
     }
@@ -230,6 +255,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @SneakyThrows
     private void removeFile(String fileName) {
+        log.debug("Removing file: {}", fileName);
         minioClient.removeObject(RemoveObjectArgs.builder()
                 .bucket(minioProperties.bucketName())
                 .object(fileName)
@@ -238,12 +264,13 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @SneakyThrows
     private void findObject(String fileName) {
+        log.debug("Checking if file exists: {}", fileName);
         StatObjectResponse response = minioClient.statObject(StatObjectArgs.builder()
                 .bucket(minioProperties.bucketName())
                 .object(fileName)
                 .build());
         if (response == null) {
-            log.error("File not found: {}", fileName);
+            log.warn("File not found: {}", fileName);
             throw new FileNotFoundException("File not found: " + fileName);
         }
     }

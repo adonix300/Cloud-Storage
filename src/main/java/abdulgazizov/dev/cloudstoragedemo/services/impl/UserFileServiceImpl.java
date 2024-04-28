@@ -6,8 +6,6 @@ import abdulgazizov.dev.cloudstoragedemo.services.UserFileService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,25 +17,21 @@ public class UserFileServiceImpl implements UserFileService {
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "users", key = "#id"),
-            @CacheEvict(value = "users", key = "#result.username")
-    })
-    public User addFileToUser(Long id, String fileName) {
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+    public void addFileToUser(Long id, String fileName) {
+        log.debug("Adding file {} to user with id {}", fileName, id);
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
         user.getFiles().add(fileName);
-        return userRepository.save(user);
+        userRepository.save(user);
+        log.info("File {} added to user with id {}", fileName, id);
     }
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "users", key = "#id"),
-            @CacheEvict(value = "users", key = "#result.username")
-    })
-    public User removeFileFromUser(Long id, String fileName) {
+    public void removeFileFromUser(Long id, String fileName) {
+        log.debug("Removing file {} from user with id {}", fileName, id);
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
         user.getFiles().remove(fileName);
-        return userRepository.save(user);
+        userRepository.save(user);
+        log.info("File {} removed from user with id {}", fileName, id);
     }
 }

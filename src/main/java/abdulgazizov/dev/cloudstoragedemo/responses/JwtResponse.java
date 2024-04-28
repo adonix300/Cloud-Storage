@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 @Data
 @AllArgsConstructor
-public class JwtResponse implements Serializable{
+public class JwtResponse implements Serializable {
     private final String type = "Bearer";
     @JsonProperty("auth-token")
     private final String accessToken;
