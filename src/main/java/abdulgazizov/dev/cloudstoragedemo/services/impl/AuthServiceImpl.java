@@ -11,26 +11,26 @@ import io.jsonwebtoken.Claims;
 import jakarta.security.auth.message.AuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserService userService;
-    private final Map<String, String> refreshStorage = new HashMap<>();
+    private final Map<String, String> refreshStorage = new ConcurrentHashMap<>();
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public JwtResponse login(JwtRequest request) throws BadRequestException {
+    public JwtResponse login(JwtRequest request) throws AuthException {
         log.debug("Received login request: {}", request);
         final User user = userService.getByUsername(request.getLogin());
+
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.info("User authenticated successfully");
             final String accessToken = jwtProvider.generateAccessToken(user);
@@ -41,18 +41,20 @@ public class AuthServiceImpl implements AuthService {
             return new JwtResponse(accessToken, refreshToken);
         } else {
             log.warn("Invalid password for user {}", request.getLogin());
-            throw new BadRequestException("Password is wrong");
+            throw new AuthException("Password is wrong");
         }
     }
 
-    public void logout(String refreshToken) {
-        log.debug("Received logout request for refresh token: {}", refreshToken);
-        refreshStorage.values().remove(refreshToken);
+    public void logout() throws AuthException {
+        log.debug("Received logout request");
+        String username = getJwtAuthentication().getUsername();
+        refreshStorage.remove(username);
         log.info("Refresh token removed from storage");
     }
 
-    public JwtResponse getAccessToken(String refreshToken) {
+    public JwtResponse getAccessToken(String refreshToken) throws AuthException {
         log.debug("Received request for new access token: {}", refreshToken);
+        refreshToken = refreshToken.substring(7);
         if (jwtProvider.validateRefreshToken(refreshToken)) {
             log.info("Refresh token is valid");
             final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
@@ -65,6 +67,9 @@ public class AuthServiceImpl implements AuthService {
                 log.debug("Generated new access token: {}", accessToken);
                 return new JwtResponse(accessToken, null);
             }
+        } else {
+            log.warn("Token expired {}", refreshToken);
+            throw new AuthException("Token expired");
         }
         log.warn("Invalid refresh token: {}", refreshToken);
         return new JwtResponse(null, null);
@@ -72,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
 
     public JwtResponse refresh(String refreshToken) throws AuthException {
         log.debug("Received refresh token request: {}", refreshToken);
+        refreshToken = refreshToken.substring(7);
         if (jwtProvider.validateRefreshToken(refreshToken)) {
             log.info("Refresh token is valid");
             final Claims claims = jwtProvider.getRefreshClaims(refreshToken);

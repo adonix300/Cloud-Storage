@@ -7,7 +7,6 @@ import jakarta.security.auth.message.AuthException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +21,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("login")
-    public ResponseEntity<JwtResponse> login(@RequestBody @NonNull @Valid JwtRequest jwtRequest) throws BadRequestException {
+    public ResponseEntity<JwtResponse> login(@RequestBody @NonNull @Valid JwtRequest jwtRequest) throws AuthException {
         log.debug("Received login request: {}", jwtRequest);
         final JwtResponse token = authService.login(jwtRequest);
         log.info("User logged in successfully");
@@ -30,15 +29,15 @@ public class AuthController {
     }
 
     @PostMapping("logout")
-    public ResponseEntity<?> logout(@RequestHeader(value = "Auth-Token") @NonNull String refreshToken) throws AuthException {
-        log.debug("Received logout request with auth token: {}", refreshToken);
-        authService.logout(refreshToken);
+    public ResponseEntity<?> logout() throws AuthException {
+        log.debug("Received logout request with:");
+        authService.logout();
         log.info("User logged out successfully");
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("token")
-    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestHeader(value = "Auth-Token") @NonNull String refreshToken) {
+    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestHeader(value = "Auth-Token") @NonNull String refreshToken) throws AuthException {
         log.debug("Received request for new access token: {}", refreshToken);
         final JwtResponse token = authService.getAccessToken(refreshToken);
         log.info("New access token issued");

@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 @Data
-public class UserResponse implements Serializable {
+public class UserResponse {
     private String username;
     private Set<Role> roles;
     private Set<String> files;

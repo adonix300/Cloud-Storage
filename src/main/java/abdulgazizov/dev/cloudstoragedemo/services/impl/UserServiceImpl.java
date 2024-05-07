@@ -22,6 +22,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * {@inheritDoc}
+     * @throws EntityExistsException if a user with the same username already exists
+     */
     @Override
     @Transactional
     public User create(User user) {
@@ -40,18 +44,39 @@ public class UserServiceImpl implements UserService {
         return createdUser;
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws EntityNotFoundException if no user is found with the given ID
+     */
     @Override
     @Transactional(readOnly = true)
     public User getById(Long id) {
         log.debug("Getting user by id: {}", id);
-        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        try {
+            User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+            log.debug("Found user: {}", user);
+            return user;
+        } catch (EntityNotFoundException e) {
+            log.error(e.getMessage());
+            throw e;
+        }
     }
 
-
+    /**
+     * {@inheritDoc}
+     * @throws EntityNotFoundException if no user is found with the given username
+     */
     @Override
     @Transactional(readOnly = true)
     public User getByUsername(String username) {
         log.debug("Getting user by username: {}", username);
-        return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
+        try {
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User with username " + username + " not found"));
+            log.debug("Found user: {}", user);
+            return user;
+        } catch (EntityNotFoundException e) {
+            log.error(e.getMessage());
+            throw e;
+        }
     }
 }

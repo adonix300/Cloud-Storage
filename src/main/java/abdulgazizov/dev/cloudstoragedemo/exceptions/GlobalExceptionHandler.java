@@ -1,6 +1,7 @@
 package abdulgazizov.dev.cloudstoragedemo.exceptions;
 
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Slf4j
@@ -24,17 +26,38 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException e) {
-        log.error("Bad request: {}", e.getMessage());
-        ErrorResponse error = new ErrorResponse("Bad request", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEntityExistsException(EntityExistsException e) {
+        log.error("EntityExistsException: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("EntityExistsException", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFileNotFoundException(FileNotFoundException e) {
+        log.error("File not found: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("File not found", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     @ExceptionHandler(FileUploadException.class)
     public ResponseEntity<ErrorResponse> handleFileUploadException(FileUploadException e) {
         log.error("File upload error: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse("File upload error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException e) {
+        log.error("NullPointerException: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("NullPointerException", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException e) {
+        log.error("Bad request: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse("Bad request", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

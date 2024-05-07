@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.AccessDeniedException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +46,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         Long id = authService.getJwtAuthentication().getId();
         createBucket();
 
-        if (file.isEmpty() || file.getOriginalFilename() == null) {
+        if (file.isEmpty() || file.getOriginalFilename() == null || file.getOriginalFilename().isEmpty()) {
             log.warn("File is empty");
             throw new FileUploadException("File is empty");
         }
@@ -153,7 +152,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
         checkUserHasFile(user, fileName);
-
         try {
             findObject(fileName);
             removeFile(fileName);
@@ -202,10 +200,10 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .build());
     }
 
-    private void checkUserHasFile(User user, String fileName) throws AccessDeniedException {
+    private void checkUserHasFile(User user, String fileName) throws FileNotFoundException {
         if (!user.getFiles().contains(fileName)) {
-            log.warn("File access denied: User {} does not own the file {}", user.getUsername(), fileName);
-            throw new AccessDeniedException("You do not have permission to access this file");
+            log.warn("File not found: User {} does not own the file {}", user.getUsername(), fileName);
+            throw new FileNotFoundException("File not found: " + fileName);
         }
     }
 

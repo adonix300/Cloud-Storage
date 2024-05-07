@@ -25,4 +25,4 @@ minio:
   accessKey: minioadmin
   secretKey: minioadmin
   bucket: files
-
+#  bucket: files

@@ -24,6 +24,7 @@ import java.io.IOException;
 public class JwtFilter extends GenericFilterBean {
     private static final String AUTHORIZATION = "Auth-Token";
     private final JwtProvider jwtProvider;
+    private final JwtUtils jwtUtils;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -40,7 +41,7 @@ public class JwtFilter extends GenericFilterBean {
                 final Claims claims = jwtProvider.getAccessClaims(token);
                 log.debug("Extracted claims from token: {}", claims);
 
-                final JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
+                final JwtAuthentication jwtInfoToken = jwtUtils.generate(claims);
                 jwtInfoToken.setAuthenticated(true);
                 log.info("Authenticated user: {}", jwtInfoToken.getPrincipal());
 

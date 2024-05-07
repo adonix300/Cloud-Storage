@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-init-users-db
+      author: Danis Abdulgazizov
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: user1
+              - column:
+                  name: password
+                  value: $2a$12$V1wQvZexjSNiIz2/iIwBlODmUGcr3F3ws0p15ISJ4h9X6V1ncsKLW
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: user2
+              - column:
+                  name: password
+                  value: $2a$12$yPWvLK5JYMQxXbsH512iaOxjW3jn81RqtzRkh2F.ccPcWH/wukQHa
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: role_name
+                  value: ROLE_USER
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: role_name
+                  value: ROLE_USER
