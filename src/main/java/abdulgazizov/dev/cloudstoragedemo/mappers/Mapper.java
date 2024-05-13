@@ -1,6 +1,6 @@
 package abdulgazizov.dev.cloudstoragedemo.mappers;
 
-public interface Mappable<Entity, Response> {
+public interface Mapper<Entity, Response> {
     Entity toEntity(Response response);
 
     Response toResponse(Entity entity);
