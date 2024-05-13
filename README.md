@@ -34,9 +34,20 @@ docker-compose up -d
     After setting up the Docker containers, the application will be available at http://localhost:8081.
 
 
+- **Pre-configured Accounts:**
+
+    Two user accounts are available for testing:
+    
+  - Login: user1 Password: password
+  - Login: user2 Password: password
+
+
 - **Registering a New User:**
 
     Use the /register endpoint to create a new user.
+
+    - username:
+    - password:
 
 
 - **Logging In:**
