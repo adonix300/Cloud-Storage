@@ -25,7 +25,7 @@ This Cloud Storage application is a Java-based solution for securely storing, ma
 
 Ensure Docker and Docker Compose are installed on your system. Use the provided Dockerfile and docker-compose.yml to set up the environment.
 ```bash
-docker-compose up -d
+   docker-compose up -d
 ```
 
 ## Usage
