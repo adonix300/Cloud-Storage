@@ -5,9 +5,12 @@ spring:
     hibernate:
       ddl-auto: none
   datasource:
-    url: jdbc:postgresql://localhost:5432/cloud_storage
-    username: postgres
-    password: postgres
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+#    url: jdbc:postgresql://localhost:5432/cloud_storage
+#    username: postgres
+#    password: postgres
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.yaml
@@ -21,8 +24,11 @@ jwt:
     refresh: YXNkZ2hzZXRodHJ3aGU2NTQ1NjMzbmRibiBkYXNyZ2VhcmdlcWE=
 
 minio:
-  url: http://localhost:9000
-  accessKey: minioadmin
-  secretKey: minioadmin
-  bucket: files
+  url: ${MINIO_URL}
+  accessKey: ${MINIO_ACCESS_KEY}
+  secretKey: ${MINIO_SECRET_KEY}
+  bucket: ${MINIO_BUCKET}
+#  url: http://localhost:9000
+#  accessKey: minioadmin
+#  secretKey: minioadmin
 #  bucket: files

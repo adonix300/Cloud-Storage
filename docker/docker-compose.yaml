@@ -5,27 +5,26 @@ volumes:
     driver: local
 
 services:
-#  app:
-#    image: "d306352af91a68d1ca136de89d9c7e014c5c1b8f3dc3beb99a264535b462e078"
-#    container_name: cloud-storage-app
-#    expose:
-#      - "8081"
-#    ports:
-#      - "8081:8081"
-#    environment:
-#
-#      - DB_USER=postgres
-#      - DB_PASSWORD=postgres
-#      - DB_URL=jdbc:postgresql://db:5433/cloud_storage
-#
-#      - MINIO_BUCKET=files
-#      - MINIO_ACCESS_KEY=minioadmin
-#      - MINIO_SECRET_KEY=minioadmin
-#      - MINIO_URL=http://minio:9000
-#
-#    depends_on:
-#      - db
-#      - minio
+  app:
+    image: ccccc:latest
+    expose:
+      - "8081"
+    ports:
+      - "8081:8081"
+    environment:
+
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_URL=jdbc:postgresql://db:5432/cloud_storage
+
+      - MINIO_BUCKET=files
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_URL=http://minio:9000
+
+    depends_on:
+      - db
+      - minio
 
   db:
     image: postgres:16-alpine
@@ -35,7 +34,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=cloud_storage
 #    expose:
-#      - "5433"
+#      - "5432"
     ports:
       - "5432:5432"
 

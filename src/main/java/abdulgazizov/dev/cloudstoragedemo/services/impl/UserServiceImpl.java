@@ -24,6 +24,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * {@inheritDoc}
+     *
      * @throws EntityExistsException if a user with the same username already exists
      */
     @Override
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * {@inheritDoc}
+     *
      * @throws EntityNotFoundException if no user is found with the given ID
      */
     @Override
@@ -64,6 +66,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * {@inheritDoc}
+     *
      * @throws EntityNotFoundException if no user is found with the given username
      */
     @Override

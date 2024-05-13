@@ -15,8 +15,8 @@ public interface FileStorageService {
     /**
      * Uploads a file to the storage.
      *
-     * @param file      the file to be uploaded
-     * @param fileName  the desired file name (optional, if null, a unique name will be generated)
+     * @param file     the file to be uploaded
+     * @param fileName the desired file name (optional, if null, a unique name will be generated)
      * @return the name of the uploaded file
      */
     String upload(MultipartFile file, String fileName);
