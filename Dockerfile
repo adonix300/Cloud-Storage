@@ -1,8 +1,6 @@
 FROM openjdk:21
 
-ARG APP_JAR=*.jar
-
-COPY ${APP_JAR} app.jar
+COPY target/CloudStorageDemo-0.0.1-SNAPSHOT.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
