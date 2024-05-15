@@ -108,13 +108,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         return files;
     }
 
-    private String determineFileType(String fileName) {
-        if (fileName.contains(".")) {
-            return fileName.substring(fileName.lastIndexOf(".") + 1);
-        }
-        return "unknown";
-    }
-
     @Override
     @Transactional
     public Resource download(String fileName) throws IOException {
