@@ -122,7 +122,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         if (fileName.contains(".")) {
             return fileName.substring(fileName.lastIndexOf(".") + 1);
         }
-        return "unknown"; // Или можно вернуть null, если необходимо
+        return "unknown";
     }
 
     @Override
@@ -173,12 +173,13 @@ public class FileStorageServiceImpl implements FileStorageService {
         User user = userService.getById(id);
         checkUserHasFile(user, oldFileName);
         try {
-            findObject(oldFileName);
-            copyObject(oldFileName, newFileName);
-            removeFile(oldFileName);
+            findObject(oldFileName); // проверка на наличие старого файла
+            checkObjectDoesNotExist(newFileName); // проверка на отсутствие нового файла
+            copyObject(oldFileName, newFileName); // копируем файл с новым именем
+            removeFile(oldFileName); // удаляем старый файл
 
-            userFileService.removeFileFromUser(id, oldFileName);
-            userFileService.addFileToUser(id, newFileName);
+            userFileService.removeFileFromUser(id, oldFileName); // удаляем информацию о старом файле у пользователя
+            userFileService.addFileToUser(id, newFileName); // добавляем информацию о новом файле пользователю
 
             log.info("File renamed successfully from {} to {}", oldFileName, newFileName);
         } catch (Exception e) {
@@ -187,7 +188,32 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    /**
+     * Checks if a file does not exist in the bucket.
+     *
+     * @param fileName the name of the file to check
+     * @throws FileUploadException if the file already exists
+     */
+    @SneakyThrows
+    private void checkObjectDoesNotExist(String fileName) {
+        try {
+            minioClient.statObject(StatObjectArgs.builder()
+                    .bucket(minioProperties.bucketName())
+                    .object(fileName)
+                    .build());
+            log.warn("File already exists: {}", fileName);
+            throw new FileUploadException("File already exists: " + fileName);
+        } catch (Exception e) {
+            log.debug("File does not exist: {}", fileName);
+        }
+    }
 
+    /**
+     * Copies an object in the MinIO bucket.
+     *
+     * @param oldFileName the name of the source file
+     * @param newFileName the name of the destination file
+     */
     @SneakyThrows
     private void copyObject(String oldFileName, String newFileName) {
         minioClient.copyObject(CopyObjectArgs.builder()
@@ -200,6 +226,13 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .build());
     }
 
+    /**
+     * Checks if a user owns a file.
+     *
+     * @param user     the user
+     * @param fileName the name of the file to check
+     * @throws FileNotFoundException if the user does not own the file
+     */
     private void checkUserHasFile(User user, String fileName) throws FileNotFoundException {
         if (!user.getFiles().contains(fileName)) {
             log.warn("File not found: User {} does not own the file {}", user.getUsername(), fileName);
@@ -207,7 +240,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-
+    /**
+     * Creates a bucket in the MinIO storage if it does not already exist.
+     *
+     * @throws FileUploadException if an error occurs during bucket creation
+     */
     @SneakyThrows
     private void createBucket() {
         log.debug("Creating bucket: {}", minioProperties.bucketName());
@@ -227,7 +264,13 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-
+    /**
+     * Saves a file to the MinIO storage.
+     *
+     * @param inputStream the input stream of the file
+     * @param fileName    the name of the file to save
+     * @throws Exception if an error occurs during file saving
+     */
     @SneakyThrows
     private void saveFile(InputStream inputStream, String fileName) {
         log.debug("Saving file: {}", fileName);
@@ -238,19 +281,36 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .build());
     }
 
+    /**
+     * Generates a unique file name.
+     *
+     * @param file the multipart file
+     * @return a generated unique file name
+     */
     private String generateFileName(MultipartFile file) {
         log.debug("Generating file name: {}", file.getOriginalFilename());
         String extension = getExtension(file);
         return UUID.randomUUID() + "." + extension;
     }
 
+    /**
+     * Retrieves the file extension from the multipart file.
+     *
+     * @param file the multipart file
+     * @return the file extension
+     */
     private String getExtension(MultipartFile file) {
         log.debug("Getting extension for file: {}", file.getOriginalFilename());
         return Objects.requireNonNull(file.getOriginalFilename())
                 .substring(file.getOriginalFilename().lastIndexOf(".") + 1);
     }
 
-
+    /**
+     * Removes a file from the MinIO storage.
+     *
+     * @param fileName the name of the file to remove
+     * @throws Exception if an error occurs during file removal
+     */
     @SneakyThrows
     private void removeFile(String fileName) {
         log.debug("Removing file: {}", fileName);
@@ -260,6 +320,12 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .build());
     }
 
+    /**
+     * Checks if a file exists in the MinIO storage.
+     *
+     * @param fileName the name of the file to check
+     * @throws FileNotFoundException if the file does not exist
+     */
     @SneakyThrows
     private void findObject(String fileName) {
         log.debug("Checking if file exists: {}", fileName);
