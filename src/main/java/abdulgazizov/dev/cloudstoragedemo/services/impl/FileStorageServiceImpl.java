@@ -94,15 +94,6 @@ public class FileStorageServiceImpl implements FileStorageService {
                     break;
                 }
                 Item fileItem = item.get();
-                ZonedDateTime lastModified = fileItem.lastModified();
-
-//                FileDto fileDto = FileDto.builder()
-//                        .fileName(fileItem.objectName())
-//                        .size(fileItem.size())
-//                        .fileType(determineFileType(fileItem.objectName()))
-//                        .editedAt(lastModified.toInstant().toEpochMilli())
-//                        .build();
-
 
                 if (user.getFiles().contains(fileItem.objectName())) {
                     files.add(fileItem);
