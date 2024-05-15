@@ -1,6 +1,7 @@
 package abdulgazizov.dev.cloudstoragedemo.services;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
+import io.minio.messages.Item;
 import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,5 +55,5 @@ public interface FileStorageService {
      * @return a list of FileDto objects representing the retrieved files
      * @throws BadRequestException if the limit is less than or equal to zero
      */
-    List<FileDto> getFiles(int limit) throws BadRequestException;
+    List<Item> getFiles(int limit) throws BadRequestException;
 }

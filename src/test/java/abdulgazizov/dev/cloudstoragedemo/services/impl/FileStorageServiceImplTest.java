@@ -294,13 +294,13 @@ class FileStorageServiceImplTest {
         when(minioClient.listObjects(any(ListObjectsArgs.class))).thenReturn(results);
 
         // when
-        List<FileDto> files = fileStorageService.getFiles(limit);
+        List<Item> files = fileStorageService.getFiles(limit);
 
         // then
         assertNotNull(files);
         assertEquals(2, files.size());
-        assertTrue(files.stream().anyMatch(f -> f.getFileName().equals("file1.txt")));
-        assertTrue(files.stream().anyMatch(f -> f.getFileName().equals("file2.txt")));
+        assertTrue(files.stream().anyMatch(f -> f.objectName().equals("file1.txt")));
+        assertTrue(files.stream().anyMatch(f -> f.objectName().equals("file2.txt")));
     }
 
     @Test

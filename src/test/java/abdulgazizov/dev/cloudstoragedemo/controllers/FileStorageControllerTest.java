@@ -3,7 +3,9 @@ package abdulgazizov.dev.cloudstoragedemo.controllers;
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileNameDto;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
+import abdulgazizov.dev.cloudstoragedemo.mappers.FileMapper;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
+import io.minio.messages.Item;
 import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,8 +91,15 @@ class FileStorageControllerTest {
     void getFiles_Successfully() throws BadRequestException {
         //given
         int limit = 5;
-        List<FileDto> fileDtos = List.of(new FileDto("file1.txt", "text/plain", 1234L, 100L));
-        when(fileStorageService.getFiles(limit)).thenReturn(fileDtos);
+
+        Item item = mock(Item.class);
+        when(item.objectName()).thenReturn("file1.txt");
+        when(item.size()).thenReturn(1234L);
+        when(item.lastModified()).thenReturn(ZonedDateTime.now());
+
+        List<Item> items = List.of(item);
+        when(fileStorageService.getFiles(limit)).thenReturn(items);
+        FileDto expectedFileDto = FileMapper.toFileDto(item);
 
         //when
         var response = fileStorageController.getFiles(limit);
@@ -97,7 +107,9 @@ class FileStorageControllerTest {
         //then
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(fileDtos, response.getBody());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals(expectedFileDto, response.getBody().getFirst());
     }
 
     @Test

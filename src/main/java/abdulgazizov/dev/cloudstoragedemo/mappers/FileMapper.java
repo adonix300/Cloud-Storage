@@ -2,9 +2,11 @@ package abdulgazizov.dev.cloudstoragedemo.mappers;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import io.minio.messages.Item;
+import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
 
+@Component
 public class FileMapper {
 
     public static FileDto toFileDto(Item fileItem) {

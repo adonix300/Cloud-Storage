@@ -2,7 +2,9 @@ package abdulgazizov.dev.cloudstoragedemo.controllers;
 
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import abdulgazizov.dev.cloudstoragedemo.dtos.FileNameDto;
+import abdulgazizov.dev.cloudstoragedemo.mappers.FileMapper;
 import abdulgazizov.dev.cloudstoragedemo.services.FileStorageService;
+import io.minio.messages.Item;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +18,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class FileStorageController {
     private final FileStorageService fileStorageService;
+    private final FileMapper fileMapper;
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PostMapping("file")
@@ -42,7 +47,7 @@ public class FileStorageController {
     @GetMapping("list")
     public ResponseEntity<List<FileDto>> getFiles(@RequestParam("limit") @NonNull int limit) throws BadRequestException {
         log.debug("Received request to get files with limit={}", limit);
-        List<FileDto> resources = fileStorageService.getFiles(limit);
+        List<FileDto> resources = fileStorageService.getFiles(limit).stream().map(FileMapper::toFileDto).collect(Collectors.toList());
         log.info("Files retrieved successfully");
         return ResponseEntity.ok().body(resources);
     }

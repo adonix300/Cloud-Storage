@@ -73,7 +73,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     @Transactional(readOnly = true)
     @SneakyThrows
-    public List<FileDto> getFiles(int limit) throws BadRequestException {
+    public List<Item> getFiles(int limit) throws BadRequestException {
         log.debug("Getting files with limit: {}", limit);
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
@@ -82,7 +82,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             log.warn("Limit must be greater than 0, received: {}", limit);
             throw new BadRequestException("Limit must be greater than 0");
         }
-        List<FileDto> files = new ArrayList<>();
+        List<Item> files = new ArrayList<>();
         try {
             Iterable<Result<Item>> items = minioClient.listObjects(ListObjectsArgs.builder()
                     .bucket(minioProperties.bucketName())
@@ -97,16 +97,16 @@ public class FileStorageServiceImpl implements FileStorageService {
                 Item fileItem = item.get();
                 ZonedDateTime lastModified = fileItem.lastModified();
 
-                FileDto fileDto = FileDto.builder()
-                        .fileName(fileItem.objectName())
-                        .size(fileItem.size())
-                        .fileType(determineFileType(fileItem.objectName()))
-                        .editedAt(lastModified.toInstant().toEpochMilli())
-                        .build();
+//                FileDto fileDto = FileDto.builder()
+//                        .fileName(fileItem.objectName())
+//                        .size(fileItem.size())
+//                        .fileType(determineFileType(fileItem.objectName()))
+//                        .editedAt(lastModified.toInstant().toEpochMilli())
+//                        .build();
 
 
-                if (user.getFiles().contains(fileDto.getFileName())) {
-                    files.add(fileDto);
+                if (user.getFiles().contains(fileItem.objectName())) {
+                    files.add(fileItem);
                     count++;
                 }
             }
