@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -54,16 +53,13 @@ public class FileStorageServiceImpl implements FileStorageService {
             fileName = generateFileName(file);
         }
 
-        InputStream inputStream;
-
-        try {
-            inputStream = file.getInputStream();
+        try (InputStream inputStream = file.getInputStream()) {
+            saveFile(inputStream, fileName);
         } catch (IOException e) {
             log.error("Error reading file input stream: {}", e.getMessage(), e);
             throw new FileUploadException("File upload failed: " + e.getMessage());
         }
 
-        saveFile(inputStream, fileName);
         userFileService.addFileToUser(id, fileName);
         log.info("File uploaded successfully: {}", fileName);
         return fileName;
@@ -154,8 +150,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         log.debug("Renaming file: oldFilename={}, newFilename={}", oldFileName, newFileName);
         Long id = authService.getJwtAuthentication().getId();
         User user = userService.getById(id);
-        checkUserHasFile(user, oldFileName);
         try {
+            checkUserHasFile(user, oldFileName); // проеверка на наличие файла у пользователя
             findObject(oldFileName); // проверка на наличие старого файла
             checkObjectDoesNotExist(newFileName); // проверка на отсутствие нового файла
             copyObject(oldFileName, newFileName); // копируем файл с новым именем
