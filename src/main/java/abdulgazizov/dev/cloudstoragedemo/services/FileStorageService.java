@@ -1,6 +1,5 @@
 package abdulgazizov.dev.cloudstoragedemo.services;
 
-import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import io.minio.messages.Item;
 import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;

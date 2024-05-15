@@ -1,6 +1,5 @@
 package abdulgazizov.dev.cloudstoragedemo.services.impl;
 
-import abdulgazizov.dev.cloudstoragedemo.dtos.FileDto;
 import abdulgazizov.dev.cloudstoragedemo.entity.User;
 import abdulgazizov.dev.cloudstoragedemo.exceptions.FileUploadException;
 import abdulgazizov.dev.cloudstoragedemo.properties.MinioProperties;
