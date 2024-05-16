@@ -154,11 +154,12 @@ public class FileStorageServiceImpl implements FileStorageService {
             checkUserHasFile(user, oldFileName); // проеверка на наличие файла у пользователя
             findObject(oldFileName); // проверка на наличие старого файла
             checkObjectDoesNotExist(newFileName); // проверка на отсутствие нового файла
-            copyObject(oldFileName, newFileName); // копируем файл с новым именем
-            removeFile(oldFileName); // удаляем старый файл
 
             userFileService.removeFileFromUser(id, oldFileName); // удаляем информацию о старом файле у пользователя
             userFileService.addFileToUser(id, newFileName); // добавляем информацию о новом файле пользователю
+
+            copyObject(oldFileName, newFileName); // копируем файл с новым именем
+            removeFile(oldFileName); // удаляем старый файл
 
             log.info("File renamed successfully from {} to {}", oldFileName, newFileName);
         } catch (Exception e) {
@@ -291,7 +292,8 @@ public class FileStorageServiceImpl implements FileStorageService {
      * @throws Exception if an error occurs during file removal
      */
     @SneakyThrows
-    private void removeFile(String fileName) {
+    @Transactional
+    protected void removeFile(String fileName) {
         log.debug("Removing file: {}", fileName);
         minioClient.removeObject(RemoveObjectArgs.builder()
                 .bucket(minioProperties.bucketName())
