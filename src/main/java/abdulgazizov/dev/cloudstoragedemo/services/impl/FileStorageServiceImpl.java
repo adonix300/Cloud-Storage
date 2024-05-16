@@ -155,8 +155,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             findObject(oldFileName); // проверка на наличие старого файла
             checkObjectDoesNotExist(newFileName); // проверка на отсутствие нового файла
 
-            userFileService.removeFileFromUser(id, oldFileName); // удаляем информацию о старом файле у пользователя
             userFileService.addFileToUser(id, newFileName); // добавляем информацию о новом файле пользователю
+            userFileService.removeFileFromUser(id, oldFileName); // удаляем информацию о старом файле у пользователя
 
             copyObject(oldFileName, newFileName); // копируем файл с новым именем
             removeFile(oldFileName); // удаляем старый файл
