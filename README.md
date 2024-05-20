@@ -11,6 +11,7 @@ This Cloud Storage application is a Java-based solution for securely storing, ma
 - Docker and Docker Compose
 - PostgreSQL Database
 - MinIO Storage
+- Liquibase
 ## Installation
 1. **Clone the Repository:**
 ```bash
